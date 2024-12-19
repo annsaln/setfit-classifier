@@ -85,6 +85,7 @@ if options.task == "test":
     model = SetFitModel.from_pretrained(
         "sentence-transformers/paraphrase-mpnet-base-v2", trust_remote_code=True
     )
+
 else:
     dataset, labels = load_data(options)
     # Load SetFit model from Hub
@@ -107,20 +108,30 @@ def eval_metrics(y_pred, y_test, labels=labels):
     metrics = {"acc": acc, "f1": f1, "precision": precision, "recall": recall}
     return metrics
 
-
-args = TrainingArguments(
-    batch_size=options.batch_size,
-    num_epochs=(
-        options.epochs,
-        16,
-    ),  # set number of epochs for ST embedding and classification head training
-    body_learning_rate=(options.learning_rate, 1e-5),
-    loss=CosineSimilarityLoss,
-    sampling_strategy=options.sampling_strategy,
-    logging_steps=500,
-    #    load_best_model_at_end=True,
-    output_dir=options.output_dir,
-)
+if options.epochs == 0:
+    args = TrainingArguments(
+        batch_size=options.batch_size,
+        num_epochs=(
+            0,
+            1, # run logistic regression layer once
+        ),  # set number of epochs for ST embedding and classification head training
+        warmup_proportion=0.0,
+        seed=randint(0,100)
+    )    
+else:
+    args = TrainingArguments(
+        batch_size=options.batch_size,
+        num_epochs=(
+            options.epochs,
+            16,
+        ),  # set number of epochs for ST embedding and classification head training
+        body_learning_rate=(options.learning_rate, 1e-5),
+        loss=CosineSimilarityLoss,
+        sampling_strategy=options.sampling_strategy,
+        logging_steps=500,
+        #    load_best_model_at_end=True,
+        output_dir=options.output_dir,
+    )
 
 
 # Create trainer
@@ -133,7 +144,9 @@ trainer = Trainer(
     #    callbacks=[EarlyStoppingCallback(early_stopping_patience=options.patience)],
 )
 
+
 trainer.train()
+    
 metrics = trainer.evaluate(dataset["test"])
 print(metrics)
 i = options.train[-1]
