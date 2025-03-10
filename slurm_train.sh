@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --account=Project_2010887         # Billing project, has to be defined!
+#SBATCH --account=Project_2002026         # Billing project, has to be defined!
 #SBATCH --partition=gpu
-#SBATCH --time=24:00:00
+#SBATCH --time=15:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=16g
@@ -19,17 +19,15 @@ ln -s $SLURM_JOBID.out logs/current.out
 
 module purge
 module load pytorch 
-# try a venv? https://docs.csc.fi/support/tutorials/python-usage-guide/#installing-python-packages-to-existing-modules
+
 pip install -q --user datasets
 pip install -q --user setfit
-pip install -q --user huggingface_hub==0.23.5 
+pip install -q --user huggingface_hub
 
-#MODEL="TurkuNLP/sbert-cased-finnish-paraphrase"
-#MODEL="Alibaba-NLP/gte-multilingual-base" # this runs out of memory with bs 8
+MODEL="TurkuNLP/sbert-cased-finnish-paraphrase"
 #MODEL="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" #mteb 148
 #MODEL="intfloat/multilingual-e5-small"
 #MODEL="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-MODEL="sentence-transformers/paraphrase-mpnet-base-v2"
 #MODEL="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
 
 TASK=$1
@@ -46,7 +44,7 @@ echo "EPOCHS:$EPOCHS"
 echo "SAMPLES:$N_SAMPLES"
 
 export DATA_DIR=data/$TASK
-export OUTPUT_DIR=checkpoints/$MODEL-$TASK$N_SAMPLES
+export OUTPUT_DIR=checkpoints/$MODEL-$TASK$N_SAMPLES-$EPOCHS
 export HF_HOME=cachedir
 
 mkdir -p "$OUTPUT_DIR"
@@ -64,7 +62,7 @@ srun python train.py \
   --n_iterations 1 \
   --n_samples $N_SAMPLES \
   --task $TASK \
-  --output_dir $OUTPUT_DIR-$i \
+  --output_dir $OUTPUT_DIR-$i 
 done
 #rm -r $OUTPUT_DIR
 

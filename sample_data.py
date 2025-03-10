@@ -25,8 +25,6 @@ seed = np.random.RandomState(42)
 # the data should have n samples per class, not n samples per class combination
 # all the sub-register examples have two labels: main register and subregister
 # because of this, main register labels will appear at least n * subregister times
-# include only examples from subregisters that are not hybrids in the training set?
-# TODO: fix this
 
 if "fincore" in options.task:
     format = "csv"

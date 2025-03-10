@@ -6,8 +6,6 @@ from sentence_transformers.losses import CosineSimilarityLoss
 from setfit import SetFitModel, Trainer, TrainingArguments, sample_dataset
 from sklearn.metrics import (
     classification_report,
-    accuracy_score,
-    precision_recall_fscore_support,
 )
 import datasets
 import sys
@@ -101,11 +99,8 @@ else:
 
 def eval_metrics(y_pred, y_test, labels=labels):
     print(classification_report(y_test, y_pred, target_names=labels))
-    acc = accuracy_score(y_test, y_pred)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        y_test, y_pred=y_pred, average="micro"
-    )
-    metrics = {"acc": acc, "f1": f1, "precision": precision, "recall": recall}
+    res = classification_report(y_test, y_pred, target_names=labels, output_dict=True)
+    metrics = {"f1": res['micro avg']['f1-score'], "precision": res['micro avg']['precision'], "recall": res['micro avg']['recall']}
     return metrics
 
 if options.epochs == 0:
@@ -116,7 +111,8 @@ if options.epochs == 0:
             1, # run logistic regression layer once
         ),  # set number of epochs for ST embedding and classification head training
         warmup_proportion=0.0,
-        seed=randint(0,100)
+        seed=randint(0,100),
+        output_dir=f'{options.output_dir}-BL'
     )    
 else:
     args = TrainingArguments(
@@ -158,7 +154,6 @@ with open(f"output/{options.task}-stats.tsv", "a") as f:
         options.n_samples,
         i,
         metrics["f1"],
-        metrics["acc"],
         metrics["precision"],
         metrics["recall"],
     ]
@@ -171,7 +166,6 @@ with open(f"output/{options.task}-stats.tsv", "a") as f:
                     "samples",
                     "iteration",
                     "f1",
-                    "acc",
                     "precision",
                     "recall",
                 ],
@@ -184,17 +178,3 @@ with open(f"output/{options.task}-stats.tsv", "a") as f:
 
 # save trained model
 trainer.model.save_pretrained(options.output_dir)
-
-# load pre-trained model for validation
-# saved_model = SetFitModel.from_pretrained(save_directory)
-
-# preds = trainer.model.predict(dataset['test']['text']).tolist()
-# print(trainer.model.labels)
-# label_ids = trainer.model.id2label()
-# with open(f'preds/{options.task}-{options.model_name.split("/")[-1]}-{options.n_samples}-{i}.tsv', 'w') as f:
-#    csv_writer = writer(f, delimiter='\t', lineterminator='\n')
-#    csv_writer.writerow(["text", "true", "pred"])
-#    rows = [[dataset['test']['text'][i], ",".join(sorted([labels[t] for t in dataset['test']['label'][i]])),  ",".join(sorted([labels[l] for l in p]) for i, p in enumerate(preds))]]
-#    print(rows[0])
-#    csv_writer.writerows(rows)
-#    f.close()
