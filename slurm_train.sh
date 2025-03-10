@@ -44,7 +44,7 @@ echo "EPOCHS:$EPOCHS"
 echo "SAMPLES:$N_SAMPLES"
 
 export DATA_DIR=data/$TASK
-export OUTPUT_DIR=checkpoints/$MODEL-$TASK$N_SAMPLES-$EPOCHS
+export OUTPUT_DIR=checkpoints/$MODEL-$TASK-$N_SAMPLES-$EPOCHS
 export HF_HOME=cachedir
 
 mkdir -p "$OUTPUT_DIR"
@@ -59,7 +59,6 @@ srun python train.py \
   --learning_rate $LR \
   --epochs $EPOCHS \
   --batch_size $BS \
-  --n_iterations 1 \
   --n_samples $N_SAMPLES \
   --task $TASK \
   --output_dir $OUTPUT_DIR-$i 

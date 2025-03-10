@@ -53,12 +53,8 @@ def argparser():
     ap.add_argument(
         "--save_model", default=None, metavar="FILE", help="Save model to file"
     )
-    ap.add_argument(
-        "--load_model", default=None, metavar="FILE", help="load existing model"
-    )
     ap.add_argument("--n_samples", type=int, default=8)
     ap.add_argument("--sampling_strategy", type=str, default="unique")
-    ap.add_argument("--n_iterations", type=int, default=1)
     ap.add_argument(
         "--task",
         type=str,
@@ -66,13 +62,14 @@ def argparser():
         choices=["fincore", "fincore-upper", "toxicity", "yle", "ylilauta", "test"],
     )
     ap.add_argument("--output_dir", default="checkpoints")
-    ap.add_argument("--save_predictions", default=False)
     return ap
 
 
 options = argparser().parse_args(sys.argv[1:])
 learning_rate = options.learning_rate
 print(options.train)
+
+# You can run a test to replicate the results from the original Tunstall et al. paper
 if options.task == "test":
     dataset = datasets.load_dataset("SetFit/emotion")
     dataset["train"] = sample_dataset(
@@ -84,6 +81,7 @@ if options.task == "test":
         "sentence-transformers/paraphrase-mpnet-base-v2", trust_remote_code=True
     )
 
+# Otherwise, load data with a script
 else:
     dataset, labels = load_data(options)
     # Load SetFit model from Hub
@@ -96,24 +94,22 @@ else:
     else:
         model = SetFitModel.from_pretrained(options.model_name, trust_remote_code=True)
 
-
+# Custom evaluation metrics function for SetFit.trainer to get more fine-grained results
 def eval_metrics(y_pred, y_test, labels=labels):
     print(classification_report(y_test, y_pred, target_names=labels))
     res = classification_report(y_test, y_pred, target_names=labels, output_dict=True)
     metrics = {"f1": res['micro avg']['f1-score'], "precision": res['micro avg']['precision'], "recall": res['micro avg']['recall']}
     return metrics
 
+# Set epochs as 0 to run baseline experiments
 if options.epochs == 0:
     args = TrainingArguments(
         batch_size=options.batch_size,
-        num_epochs=(
-            0,
-            1, # run logistic regression layer once
-        ),  # set number of epochs for ST embedding and classification head training
+        num_epochs=0,  # run only classification head training with default number of epochs
         warmup_proportion=0.0,
         seed=randint(0,100),
         output_dir=f'{options.output_dir}-BL'
-    )    
+    )        
 else:
     args = TrainingArguments(
         batch_size=options.batch_size,
@@ -125,7 +121,6 @@ else:
         loss=CosineSimilarityLoss,
         sampling_strategy=options.sampling_strategy,
         logging_steps=500,
-        #    load_best_model_at_end=True,
         output_dir=options.output_dir,
     )
 
@@ -137,12 +132,12 @@ trainer = Trainer(
     train_dataset=dataset["train"],
     eval_dataset=dataset["dev"],
     metric=eval_metrics,
-    #    callbacks=[EarlyStoppingCallback(early_stopping_patience=options.patience)],
 )
 
-
+# Train the model
 trainer.train()
-    
+
+# Evaluate the model, print the results in a file
 metrics = trainer.evaluate(dataset["test"])
 print(metrics)
 i = options.train[-1]
