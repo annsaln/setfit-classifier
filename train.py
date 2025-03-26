@@ -13,9 +13,9 @@ import sys
 
 # default arguments
 LEARNING_RATE = 2e-5
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 TRAIN_EPOCHS = 1
-MODEL_NAME = "TurkuNLP/sbert-uncased-finnish-paraphrase"
+MODEL_NAME = "TurkuNLP/sbert-cased-finnish-paraphrase"
 
 
 def argparser():
@@ -43,15 +43,6 @@ def argparser():
         type=float,
         default=LEARNING_RATE,
         help="Learning rate",
-    )
-    ap.add_argument(
-        "--checkpoints",
-        default="checkpoints",
-        metavar="FILE",
-        help="Save model checkpoints to directory",
-    )
-    ap.add_argument(
-        "--save_model", default=None, metavar="FILE", help="Save model to file"
     )
     ap.add_argument("--n_samples", type=int, default=8)
     ap.add_argument("--sampling_strategy", type=str, default="unique")

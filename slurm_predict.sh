@@ -23,13 +23,7 @@ module load pytorch
 pip install -q --user datasets
 pip install -q --user setfit
 pip install -q --user huggingface_hub
-pip install -q --user diffusers>=0.29.0
-
-#MODEL="TurkuNLP/sbert-cased-finnish-paraphrase"
-#MODEL="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" #mteb 148
-#MODEL="intfloat/multilingual-e5-small"
-#MODEL="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-#MODEL="sentence-transformers/paraphrase-xlm-r-multilingual-v1"
+pip install -q --user "diffusers["torch"]>=0.29.0"
 
 MODEL=$1
 MODEL_ALIAS=$2

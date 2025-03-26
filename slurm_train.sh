@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=Project_2002026         # Billing project, has to be defined!
 #SBATCH --partition=gpu
-#SBATCH --time=15:00:00
+#SBATCH --time=00:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=16g
